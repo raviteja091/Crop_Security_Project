@@ -1,0 +1,268 @@
+ Ardiuno code: 
+
+#include<LiquidCrystal.h> 
+const int rs = 8, en = 9, d4 = 10, d5 = 11, d6 = 12, d7 = 13; 
+#include <DFRobot_DHT11.h> 
+DFRobot_DHT11 DHT; 
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7); 
+int trig=6; int echo=7; int ms=A0; int 
+l1=A2; int l2=A3; int l3=A4; 
+int l4=A5; int 
+mot=4; 
+#define DHT11_PIN A1 
+int buz=5; void setup() { 
+ // put your setup code here, to run once: 
+Serial.begin(9600); 
+pinMode(trig,OUTPUT); 
+pinMode(mot,OUTPUT); 
+pinMode(echo,INPUT); 
+pinMode(buz,OUTPUT); 
+digitalWrite(buz,0); lcd.begin(16,2); 
+digitalWrite(mot,0); lcd.print(" 
+WELCOME "); 
+} 
+void loop() { 
+ // put your main code here, to run repeatedly: 
+DHT.read(DHT11_PIN); int 
+tval=DHT.temperature; int 
+hval=DHT.humidity; 
+digitalWrite(trig,1); 
+delayMicroseconds(10); 
+digitalWrite(trig,0); int 
+dst=pulseIn(echo,1)/58.2; int 
+l1val=analogRead(l1)/100; int 
+l2val=9-(analogRead(l2))/100; int 
+l3val=(analogRead(l3))/100; int 
+l4val=(analogRead(l4))/100; int 
+mval=10-analogRead(ms)/102; 
+Serial.println("L1:"+String(l1val)+" L2:"+String(l2val)+ " L3:"+String(l3val)+ " 
+L4:"+String(l4val) + " M:"+String(mval)+ " D:"+String(dst)); lcd.clear(); 
+lcd.print("E:"+String(l1val) + " W:"+String(l2val)+ " N:"+String(l3val)+ " S:"+String(l4val)); 
+lcd.setCursor(0,1); lcd.print("M:"+String(mval)+ " D:"+String(dst) + " T:"+String(tval)+ " 
+H:"+String(hval)); if(mval<4) 
+{ 
+digitalWrite(mot,1); 
+} else { 
+digitalWrite(mot,0); 
+} 
+if(l1val<5 || l2val<5 || l3val<5 || l4val<5 || tval>36 || dst<10) 
+{ 
+digitalWrite(buz,1); 
+delay(300); 
+digitalWrite(buz,0); 
+ } 
+delay(1000); 
+} 
+Wi-fi Module: 
+#include <WiFi.h> 
+#include <WiFiClientSecure.h> 
+#include "soc/soc.h" 
+#include "soc/rtc_cntl_reg.h" 
+#include "esp_camera.h" 
+#include <UniversalTelegramBot.h> 
+#include <ArduinoJson.h> 
+#include <NewPing.h> 
+#define CAMERA_MODEL_AI_THINKER 
+const char* ssid = "123456789"; const 
+char* password = "123456789"; 
+String chatId = "5468964605"; 
+String BOTtoken = "6829296393:AAFEZW4L3hIUcUN7Q1x5UO3be026lZVh0I"; 
+bool sendPhoto = false; 
+WiFiClientSecure clientTCP; 
+ 
+UniversalTelegramBot bot(BOTtoken, clientTCP); 
+#define BUTTON_PIN 12 
+#define FLASH_LED 4 #define TRIGGER_PIN 15 // Replace with the actual 
+GPIO pin connected to the ultrasonic sensor trigger 
+#define ECHO_PIN 14 // Replace with the actual GPIO pin connected to the 
+ultrasonic sensor echo 
+#define FIRE_SENSOR_PIN 13 
+NewPing sonar(TRIGGER_PIN, ECHO_PIN); unsigned 
+long bot_lasttime = 0; 
+#define BOT_MTBS 1000 
+#define PWDN_GPIO_NUM 32 
+#define RESET_GPIO_NUM -1 
+#define XCLK_GPIO_NUM 0 
+#define SIOD_GPIO_NUM 26 
+#define SIOC_GPIO_NUM 27 
+#define Y9_GPIO_NUM 35 
+#define Y8_GPIO_NUM 34 
+#define Y7_GPIO_NUM 39 
+#define Y6_GPIO_NUM 36 
+#define Y5_GPIO_NUM 21 
+#define Y4_GPIO_NUM 19 
+#define Y3_GPIO_NUM 18 
+#define Y2_GPIO_NUM 5 #define 
+VSYNC_GPIO_NUM 25 
+#define HREF_GPIO_NUM 23 
+#define PCLK_GPIO_NUM 22 void 
+sendPhotoTelegram(String message); 
+void setup(){ 
+ WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); 
+ Serial.begin(115200); 
+delay(1000); 
+ pinMode(FLASH_LED,OUTPUT); 
+pinMode(BUTTON_PIN,INPUT_PULLUP); 
+ WiFi.mode(WIFI_STA); 
+ Serial.println(); 
+ Serial.print("Connecting to "); 
+ Serial.println(ssid); 
+ WiFi.begin(ssid, password); 
+ clientTCP.setCACert(TELEGRAM_CERTIFICATE_ROOT); 
+while (WiFi.status() != WL_CONNECTED) { 
+ Serial.print("."); 
+delay(500); 
+ } 
+ Serial.println(); 
+ Serial.print("ESP32-CAM IP Address: "); 
+Serial.println(WiFi.localIP()); 
+camera_config_t config; config.ledc_channel 
+= LEDC_CHANNEL_0; config.ledc_timer = 
+LEDC_TIMER_0; config.pin_d0 = 
+Y2_GPIO_NUM; config.pin_d1 = 
+Y3_GPIO_NUM; config.pin_d2 = 
+Y4_GPIO_NUM; config.pin_d3 = 
+Y5_GPIO_NUM; config.pin_d4 = 
+Y6_GPIO_NUM; config.pin_d5 = 
+Y7_GPIO_NUM; config.pin_d6 = 
+Y8_GPIO_NUM; config.pin_d7 = 
+Y9_GPIO_NUM; config.pin_xclk = 
+XCLK_GPIO_NUM; config.pin_pclk = 
+PCLK_GPIO_NUM; config.pin_vsync = 
+VSYNC_GPIO_NUM; config.pin_href = 
+HREF_GPIO_NUM; config.pin_sscb_sda = 
+SIOD_GPIO_NUM; config.pin_sscb_scl = 
+SIOC_GPIO_NUM; config.pin_pwdn = 
+PWDN_GPIO_NUM; config.pin_reset = 
+RESET_GPIO_NUM; config.xclk_freq_hz = 
+
+20000000; config.pixel_format = 
+PIXFORMAT_JPEG; if(psramFound()){ 
+config.frame_size = FRAMESIZE_UXGA; 
+ config.jpeg_quality = 10; 
+config.fb_count = 2; 
+ } else { 
+ config.frame_size = FRAMESIZE_SVGA; 
+ config.jpeg_quality = 12; 
+config.fb_count = 1; } esp_err_t err = 
+esp_camera_init(&config); if (err != 
+ESP_OK) { 
+ Serial.printf("Camera init failed with error 0x%x", err); 
+delay(1000); 
+ ESP.restart(); 
+ } 
+sensor_t * s = esp_camera_sensor_get(); s-
+>set_framesize(s, FRAMESIZE_CIF); 
+} 
+void sendPhotoTelegram(String message){ bot.sendMessage(chatId, message, 
+""); 
+} void loop(){ int flameDetected = 
+digitalRead(FIRE_SENSOR_PIN); if (flameDetected 
+== LOW) { Serial.println("Flame detected!"); 
+sendPhotoTelegram("--"); sendPhoto = true; 
+ } 
+ int distance = sonar.ping_cm(); 
+if (distance <= 10) { 
+ Serial.println("Motion detected!"); if (!sendPhoto) { // Only 
+capture photo if it hasn't been sent already sendPhoto = true; 
+sendPhotoTelegram("--"); } 
+} else { sendPhoto = false; // Reset sendPhoto flag if no object is 
+detected 
+ } if 
+(sendPhoto){ 
+ Serial.println("Preparing photo"); 
+ digitalWrite(FLASH_LED, HIGH); 
+ delay(200); 
+sendPhotoTelegram(); 
+digitalWrite(FLASH_LED, LOW); 
+ sendPhoto = false; 
+ } 
+ if(digitalRead(BUTTON_PIN) == LOW){ 
+ Serial.println("Button pressed"); 
+digitalWrite(FLASH_LED, HIGH); 
+ 
+ delay(200); 
+sendPhotoTelegram(); 
+digitalWrite(FLASH_LED, LOW); 
+ sendPhoto = false; 
+ } 
+ 
+ if (millis() - bot_lasttime > BOT_MTBS) 
+ { 
+ int numNewMessages = bot.getUpdates(bot.last_message_received + 1); 
+ 
+ while (numNewMessages) 
+ { 
+ Serial.println("got response"); 
+ numNewMessages = bot.getUpdates(bot.last_message_received + 1); 
+ } bot_lasttime = 
+millis(); 
+ } 
+} 
+ 
+void sendPhotoTelegram(){ const char* 
+myDomain = "api.telegram.org"; String 
+getAll = ""; 
+ 
+ String getBody = ""; 
+ 
+ camera_fb_t * fb = NULL; 
+fb = esp_camera_fb_get(); 
+ if(!fb) { 
+ Serial.println("Camera capture failed"); 
+delay(1000); ESP.restart(); return; 
+ } 
+Serial.println("Connect to " + String(myDomain)); 
+if (clientTCP.connect(myDomain, 443)) { 
+Serial.println("Connection successful"); 
+ Serial.println("Connected to " + String(myDomain)); 
+ String head = "--IotCircuitHub\r\nContent-Disposition: form-data; 
+name=\"chat_id\"; \r\n\r\n" + chatId + "\r\n--IotCircuitHub\r\nContent-Disposition: 
+form-data; name=\"photo\"; filename=\"esp32-cam.jpg\"\r\nContent-Type: 
+image/jpeg\r\n\r\n"; 
+ String tail = "\r\n--IotCircuitHub--\r\n" uint16_t imageLen = fb-
+>len; uint16_t extraLen = head.length() + tail.length(); uint16_t 
+totalLen = imageLen + extraLen; clientTCP.println("POST 
+/bot"+BOTtoken+"/sendPhoto HTTP/1.1"); clientTCP.println("Host: 
+" + String(myDomain)); clientTCP.println("Content-Length: " + 
+String(totalLen)); clientTCP.println("Content-Type: multipart/formdata; boundary=IotCircuitHub"); clientTCP.println(); 
+
+clientTCP.print(head); uint8_t *fbBuf = fb->buf; size_t fbLen = 
+fb->len; for (size_t n=0;n<fbLen;n=n+1024) { if (n+1024<fbLen) 
+{ clientTCP.write(fbBuf, 1024); fbBuf += 1024; 
+ } 
+ else if (fbLen%1024>0) { size_t 
+remainder = fbLen%1024; 
+clientTCP.write(fbBuf, remainder); 
+ } 
+ } 
+ clientTCP.print(tail); 
+esp_camera_fb_return(fb); int waitTime = 
+10000; // timeout 10 seconds long 
+startTimer = millis(); boolean state = false; 
+while ((startTimer + waitTime) > millis()){ 
+Serial.print("."); delay(100); while 
+(clientTCP.available()){ char c = 
+clientTCP.read(); 
+ if (c == '\n'){ if 
+(getAll.length()==0) state=true; 
+getAll = ""; 
+
+ } else if (c != 
+'\r'){ getAll += 
+String(c); 
+ } if (state==true){ 
+getBody += String(c); 
+ } startTimer = 
+millis(); 
+ } 
+ if (getBody.length()>0) break; 
+ } 
+ clientTCP.stop(); 
+ Serial.println(getBody); 
+ } else { getBody=("Connected to 
+api.telegram.org failed."); 
+ Serial.println("Connected to api.telegram.org failed."); 
+ } 
+} 
+ 
