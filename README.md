@@ -13,7 +13,7 @@ An ESP32-CAM–based system combining environmental sensing (DHT11, ultrasonic),
 
 ## Getting Started
 1. Clone repo  
-2. Open `weather_security.ino` in Arduino IDE  
+2. Open `Crop_secuirty.inoo` in Arduino IDE  
 3. Install libraries:  
    - LiquidCrystal  
    - DFRobot_DHT11  
