@@ -27,4 +27,5 @@ An ESP32-CAM–based system combining environmental sensing (DHT11, ultrasonic),
 6. Upload to ESP32–CAM  
 
 Alerts trigger on flame, obstacle (<10 cm), or button press. Photos sent to Telegram chat.
+![Video Explanation](docs/VID-20240427-WA0002.mp4)
 
