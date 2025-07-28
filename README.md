@@ -1,4 +1,4 @@
-Crop Secuirty Project
+# Crop Secuirty Project
 
 An ESP32-CAM–based system combining environmental sensing (DHT11, ultrasonic), obstacle detection, flame sensing, and Telegram alerts with live camera snapshots.
 
